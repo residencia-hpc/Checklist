@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RCM Checklist</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #fff; color: #111; min-height: 100vh; }
+
+  .header { background: #fff; padding: 14px 20px 10px; display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #00B5C8; position: sticky; top: 0; z-index: 100; }
+  .header img { height: 52px; width: auto; }
+  .header-text h1 { font-size: 1.5rem; color: #111; font-weight: 700; letter-spacing: 1px; }
+  .header-text p { font-size: 0.72rem; color: #00B5C8; letter-spacing: 0.5px; }
+
+  #home { padding: 24px 16px; }
+  #home h2 { text-align: center; color: #00B5C8; font-size: 0.9rem; font-weight: 600; margin-bottom: 20px; letter-spacing: 1px; text-transform: uppercase; }
+  .proc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 500px; margin: 0 auto; }
+  .proc-btn {
+    background: #f7f7f7; border: 1.5px solid #ddd; border-radius: 14px;
+    padding: 16px 10px; text-align: center; cursor: pointer;
+    transition: all 0.2s; color: #111; font-size: 0.82rem; font-weight: 600;
+  }
+  .proc-btn:hover { border-color: #00B5C8; background: #f0fbfc; transform: translateY(-2px); }
+  .proc-btn .icon { font-size: 1.6rem; display: block; margin-bottom: 6px; }
+  .proc-btn .prog-bar { height: 4px; background: #e0e0e0; border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .proc-btn .prog-fill { height: 100%; background: linear-gradient(90deg, #00B5C8, #007a8a); border-radius: 2px; transition: width 0.4s; }
+  .proc-btn.done { border-color: #00B5C8; background: #e8f9fb; }
+
+  #detail { display: none; padding: 0 0 80px; }
+  .back-bar { background: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e0e0e0; position: sticky; top: 68px; z-index: 99; }
+  .back-btn { background: none; border: 1.5px solid #00B5C8; color: #00B5C8; border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 0.82rem; font-weight: 600; }
+  .back-btn:hover { background: #00B5C8; color: #fff; }
+  .detail-title { font-size: 1rem; font-weight: 700; color: #111; }
+  .reset-btn { margin-left: auto; background: none; border: 1px solid #ccc; color: #888; border-radius: 8px; padding: 5px 12px; cursor: pointer; font-size: 0.75rem; }
+  .reset-btn:hover { border-color: #e00; color: #e00; }
+
+  .pedido-section { margin: 16px; background: #f0fbfc; border: 1.5px solid #00B5C8; border-radius: 14px; padding: 14px 16px; }
+  .pedido-section h3 { color: #00B5C8; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .pedido-item { background: #e0f7fa; border-left: 3px solid #00B5C8; padding: 7px 10px; margin-bottom: 6px; border-radius: 0 6px 6px 0; font-size: 0.8rem; color: #111; line-height: 1.4; }
+
+  .mat-section { margin: 0 16px; }
+  .mat-section h3 { color: #555; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .mat-item { display: flex; align-items: flex-start; gap: 12px; padding: 11px 14px; background: #f7f7f7; border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.18s; border: 1.5px solid transparent; user-select: none; }
+  .mat-item:hover { background: #f0f0f0; border-color: #ccc; }
+  .mat-item.checked { background: #e8f9fb; border-color: #00B5C8; }
+  .mat-item.checked .mat-text { color: #999; text-decoration: line-through; }
+  .mat-check { width: 22px; height: 22px; border: 2px solid #bbb; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.18s; margin-top: 1px; }
+  .mat-item.checked .mat-check { background: #00B5C8; border-color: #00B5C8; }
+  .mat-check svg { display: none; }
+  .mat-item.checked .mat-check svg { display: block; }
+  .mat-text { font-size: 0.84rem; line-height: 1.4; color: #111; }
+
+  .prog-section { margin: 0 16px 16px; }
+  .prog-info { display: flex; justify-content: space-between; font-size: 0.75rem; color: #666; margin-bottom: 5px; }
+  .prog-track { height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden; }
+  .prog-track-fill { height: 100%; background: linear-gradient(90deg, #00B5C8, #007a8a); border-radius: 3px; transition: width 0.4s; }
+
+  .success-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 30px; }
+  .success-overlay.show { display: flex; animation: fadeIn 0.4s; }
+  @keyframes fadeIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+  .success-box { background: #fff; border: 2px solid #00B5C8; border-radius: 20px; padding: 36px 28px; max-width: 340px; }
+  .success-box .emoji { font-size: 3.5rem; margin-bottom: 12px; }
+  .success-box h2 { color: #00B5C8; font-size: 1.2rem; margin-bottom: 8px; }
+  .success-box p { color: #444; font-size: 0.88rem; margin-bottom: 20px; line-height: 1.5; }
+  .success-close { background: #00B5C8; color: #fff; border: none; border-radius: 10px; padding: 10px 28px; font-weight: 700; cursor: pointer; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img id="logoImg" src="" alt="RCM Logo"/>
+  <div class="header-text">
+    <h1>Checklist</h1>
+    <p>Residencia Clínica Médica · HPC</p>
+  </div>
+</div>
+
+<div id="home">
+  <h2>Seleccioná un procedimiento</h2>
+  <div class="proc-grid" id="procGrid"></div>
+</div>
+
+<div id="detail">
+  <div class="back-bar">
+    <button class="back-btn" onclick="goHome()">← Volver</button>
+    <span class="detail-title" id="detailTitle"></span>
+    <button class="reset-btn" onclick="resetCurrent()">Reiniciar</button>
+  </div>
+  <div style="margin:14px 16px 10px;" class="prog-section">
+    <div class="prog-info"><span id="progLabel">0 / 0 materiales</span><span id="progPct">0%</span></div>
+    <div class="prog-track"><div class="prog-track-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+  <div id="pedidoSection"></div>
+  <div id="materialSection" class="mat-section"></div>
+</div>
+
+<div class="success-overlay" id="successOverlay">
+  <div class="success-box">
+    <div class="emoji">🎉</div>
+    <h2>¡Ya conseguiste todo!</h2>
+    <p>Estás listo para realizar el procedimiento.</p>
+    <button class="success-close" onclick="closeSuccess()">Continuar</button>
+  </div>
+</div>
+
+<script>
+// Load logo from uploaded PNG - using the RCM logo provided
+// We'll use a data URL approach by fetching the image
+const logoEl = document.getElementById('logoImg');
+
+// Try to load the logo - use a teal placeholder SVG as fallback styled to match RCM branding
+const fallbackLogo = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 80'>
+  <text x='10' y='55' font-family='Segoe UI,sans-serif' font-weight='800' font-size='48' fill='%2300B5C8'>RCM</text>
+</svg>`;
+
+logoEl.src = fallbackLogo;
+logoEl.onerror = () => { logoEl.src = fallbackLogo; };
+
+// If user can paste/drop logo, handle it
+document.addEventListener('paste', e => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const blob = item.getAsFile();
+      const url = URL.createObjectURL(blob);
+      logoEl.src = url;
+    }
+  }
+});
+
+const PROCS = [
+  {
+    id: 0, name: "Estado\nÁcido Base", icon: "🩸",
+    pedido: ["PERFIL 1: LAC-GLU-ION-CA+-GAS"],
+    materiales: [
+      "Jeringa de perfil (heparinizada)",
+      "Aguja 16/5 naranja-mosquito o 50/8 o 40/8 para femoral",
+      "Guantes comunes",
+      "Algodón con alcohol",
+      "Gasa y cinta",
+      "Descartador"
+    ]
+  },
+  {
+    id: 1, name: "Hemocultivos", icon: "🧫",
+    pedido: [
+      "HEMOCULTIVOS x2 (o x3 según corresponda)",
+      "Material: Sangre",
+      "Sitio de la muestra: vena / arteria"
+    ],
+    materiales: [
+      "2 o 3 frascos de hemocultivos tapa verde (bacteriología)",
+      "Aguja 25/8 para vena, 16/5 para radial o 50/8-40/8 para femoral",
+      "2 jeringas de 10 ml",
+      "Iodopovidona (no jabonosa)",
+      "6 gasas",
+      "Guantes comunes × 3 pares",
+      "Guantes estériles × 2 pares",
+      "Descartador",
+      "Pañal"
+    ]
+  },
+  {
+    id: 2, name: "Sonda\nVesical", icon: "🪣",
+    pedido: ["UROCULTIVO (incluye sedimento urinario)"],
+    materiales: [
+      "Sonda Foley (hombre 18-16 Fr, mujer 14 Fr)",
+      "Bolsa de Forlano",
+      "Jeringa de 10 ml",
+      "Jeringa de 20 ml",
+      "Iodopovidona (no jabonosa)",
+      "3 gasas",
+      "Guantes comunes × 1 par",
+      "Guantes estériles × 1 par",
+      "Tacho rojo",
+      "Pañal",
+      "Lidocaína en jalea",
+      "Agua estéril 15 ml",
+      "Frasco de urocultivo (si necesario)"
+    ]
+  },
+  {
+    id: 3, name: "Paracentesis", icon: "🫃",
+    pedido: [
+      "PUNCIÓN ABDOMINAL (agrega automáticamente ANTIBIOGRAMA Y DIRECTO)",
+      "ALBÚMINA EN LÍQUIDO DE PUNCIÓN",
+      "En pedido aparte: ALBÚMINA SÉRICA"
+    ],
+    materiales: [
+      "Tubos de ensayo: 2 secos + 1 con citrato",
+      "Lidocaína 2 ampollas (indicar en HC, retirar con N° historia)",
+      "Jeringa de 10 ml",
+      "Aguja 25/8 (cargar lidocaína)",
+      "Aguja 16/5 naranja-mosquito (anestesia)",
+      "Iodopovidona (no jabonosa)",
+      "6 gasas",
+      "Guantes comunes × 2-3 pares",
+      "Guantes estériles × 2 pares",
+      "Tacho rojo",
+      "Pañal",
+      "1 Perfu",
+      "1 Bolsa Foley",
+      "Llave de 3 vías",
+      "Bajalenguas",
+      "Cinta de papel",
+      "Abbocath 14"
+    ]
+  },
+  {
+    id: 4, name: "Toracocentesis", icon: "🫁",
+    pedido: [
+      "PUNCIÓN PLEURAL (agrega automáticamente ANTIBIOGRAMA)",
+      "LDH EN LÍQUIDO DE PUNCIÓN",
+      "PROTEÍNAS EN LÍQUIDO DE PUNCIÓN",
+      "En pedido aparte: LÁCTICO DESHIDROGENASA + PROTEÍNAS TOTALES"
+    ],
+    materiales: [
+      "Tubos de ensayo: 2 secos + 1 con citrato",
+      "Lidocaína 2 ampollas (indicar en HC, retirar con N° historia)",
+      "Jeringa de 10 ml",
+      "Aguja 25/8 (cargar lidocaína)",
+      "Aguja 16/5 naranja-mosquito (anestesia)",
+      "Iodopovidona (no jabonosa)",
+      "6 gasas",
+      "Guantes comunes × 2-3 pares",
+      "Guantes estériles × 2 pares",
+      "Tacho rojo",
+      "Pañal",
+      "1 Perfu",
+      "1 Bolsa Foley",
+      "Llave de 3 vías",
+      "Bajalenguas",
+      "Cinta de papel",
+      "Abbocath 14"
+    ]
+  },
+  {
+    id: 5, name: "Punción\nLumbar", icon: "🦴",
+    pedido: [
+      "LÍQUIDO CEFALORRAQUÍDEO LUMBAR (agrega automáticamente DIRECTO Y ANTIBIOGRAMA)",
+      "LACTATO EN LÍQUIDO DE PUNCIÓN",
+      "PROTEÍNAS EN LÍQUIDO DE PUNCIÓN",
+      "GLUCOSA EN LÍQUIDO DE PUNCIÓN",
+      "Material: LCR — Sitio: columna lumbar"
+    ],
+    materiales: [
+      "Bandeja de punción lumbar (esterilización con N° HC)",
+      "Regla para presión de apertura (esterilización con N° HC)",
+      "Aguja espinal verde o amarilla (esterilización con N° HC)",
+      "Lidocaína 2 ampollas (indicar en HC, retirar con N° historia)",
+      "Jeringa de 10 ml",
+      "Aguja 25/8 (cargar lidocaína)",
+      "Aguja 16/5 naranja-mosquito (anestesia)",
+      "Iodopovidona (no jabonosa)",
+      "6 gasas",
+      "Guantes comunes × 2-3 pares",
+      "Guantes estériles × 2 pares",
+      "Tacho rojo",
+      "Pañal",
+      "3 cintas rotuladas con N° HC (numeradas 1, 2 y 3)",
+      "Barbijo",
+      "Camisolín estéril",
+      "Llave de 3 vías"
+    ]
+  },
+  {
+    id: 6, name: "Línea\nArterial", icon: "💉",
+    pedido: [],
+    materiales: [
+      "Solución antiséptica (clorhexidina)",
+      "Compresa fenestrada",
+      "Cofia",
+      "Barbijo",
+      "Camisolín estéril",
+      "Guantes estériles",
+      "Guantes comunes",
+      "Lidocaína 2 ampollas (indicar en HC, retirar con N° historia)",
+      "Gasa estéril",
+      "Jeringa de 10 ml",
+      "Aguja 25/8 (cargar lidocaína)",
+      "Aguja 16/5 naranja-mosquito (anestesia)",
+      "Dispositivo de canulación (catéter + guía + aguja cal. 20 o 22)",
+      "Solución fisiológica IV 500 ml",
+      "Sistema flush con transductor de presión y cable para monitor",
+      "Sutura",
+      "Tegaderm",
+      "Tacho rojo"
+    ]
+  },
+  {
+    id: 7, name: "Acceso Venoso\nCentral", icon: "🔗",
+    pedido: [],
+    materiales: [
+      "Solución antiséptica (clorhexidina)",
+      "Bandeja de colocación de catéter",
+      "Cofia",
+      "Barbijo",
+      "Camisolín estéril",
+      "Guantes estériles",
+      "Guantes comunes",
+      "Lidocaína 2 ampollas (indicar en HC, retirar con N° historia)",
+      "Gasa estéril",
+      "3 jeringas de 10 ml",
+      "Aguja 25/8 (cargar lidocaína)",
+      "Aguja 16/5 naranja-mosquito (anestesia)",
+      "Catéter de 3 vías",
+      "Funda para ecógrafo",
+      "Ecógrafo con transductor lineal + gel",
+      "Sutura",
+      "Tegaderm con clorhexidina (si disponible)",
+      "Tacho rojo",
+      "Solución fisiológica 100-250 ml",
+      "Perfus"
+    ]
+  }
+];
+
+const state = {};
+PROCS.forEach(p => { state[p.id] = {}; });
+let currentProc = null;
+
+function getProgress(id) {
+  const p = PROCS[id];
+  const total = p.materiales.length;
+  const done = Object.values(state[id]).filter(Boolean).length;
+  return { done, total, pct: total ? Math.round(done/total*100) : 0 };
+}
+
+function renderHome() {
+  const grid = document.getElementById('procGrid');
+  grid.innerHTML = '';
+  PROCS.forEach(p => {
+    const prog = getProgress(p.id);
+    const allDone = prog.done === prog.total;
+    const btn = document.createElement('div');
+    btn.className = 'proc-btn' + (allDone ? ' done' : '');
+    btn.innerHTML = `
+      <span class="icon">${p.icon}</span>
+      ${p.name.replace('\n','<br>')}
+      <div class="prog-bar"><div class="prog-fill" style="width:${prog.pct}%"></div></div>
+    `;
+    btn.onclick = () => openProc(p.id);
+    grid.appendChild(btn);
+  });
+}
+
+function openProc(id) {
+  currentProc = id;
+  const p = PROCS[id];
+  document.getElementById('home').style.display = 'none';
+  document.getElementById('detail').style.display = 'block';
+  document.getElementById('detailTitle').textContent = p.name.replace('\n',' ');
+
+  const ps = document.getElementById('pedidoSection');
+  if (p.pedido.length > 0) {
+    ps.innerHTML = `<div class="pedido-section">
+      <h3>🧾 Pedido de laboratorio</h3>
+      ${p.pedido.map(x=>`<div class="pedido-item">${x}</div>`).join('')}
+    </div>`;
+  } else {
+    ps.innerHTML = '';
+  }
+
+  renderMateriales(id);
+  updateProgress(id);
+}
+
+function renderMateriales(id) {
+  const p = PROCS[id];
+  const ms = document.getElementById('materialSection');
+  ms.innerHTML = `<h3 style="margin-bottom:10px;">📦 Materiales</h3>`;
+  p.materiales.forEach((m, i) => {
+    const checked = !!state[id][i];
+    const div = document.createElement('div');
+    div.className = 'mat-item' + (checked ? ' checked' : '');
+    div.innerHTML = `
+      <div class="mat-check">
+        <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+          <path d="M1 5l3.5 3.5L11 1" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="mat-text">${m}</span>
+    `;
+    div.onclick = () => toggleItem(id, i);
+    ms.appendChild(div);
+  });
+}
+
+function toggleItem(id, idx) {
+  state[id][idx] = !state[id][idx];
+  renderMateriales(id);
+  updateProgress(id);
+  const prog = getProgress(id);
+  if (prog.done === prog.total) {
+    setTimeout(() => document.getElementById('successOverlay').classList.add('show'), 300);
+  }
+}
+
+function updateProgress(id) {
+  const prog = getProgress(id);
+  document.getElementById('progLabel').textContent = `${prog.done} / ${prog.total} materiales`;
+  document.getElementById('progPct').textContent = `${prog.pct}%`;
+  document.getElementById('progFill').style.width = prog.pct + '%';
+}
+
+function goHome() {
+  document.getElementById('detail').style.display = 'none';
+  document.getElementById('home').style.display = 'block';
+  currentProc = null;
+  renderHome();
+}
+
+function resetCurrent() {
+  if (currentProc === null) return;
+  state[currentProc] = {};
+  renderMateriales(currentProc);
+  updateProgress(currentProc);
+}
+
+function closeSuccess() {
+  document.getElementById('successOverlay').classList.remove('show');
+}
+
+renderHome();
+</script>
+</body>
+</html>
